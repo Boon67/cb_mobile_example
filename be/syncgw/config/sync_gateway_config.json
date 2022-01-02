@@ -1,0 +1,12 @@
+{
+	"bootstrap": {
+		"group_id": "default",
+		"server": "couchbase-node_1",
+		"username": "default_sg_service",
+		"password": "password",
+		"server_tls_skip_verify": true,
+		"use_tls_server": false
+	}
+}
+
+

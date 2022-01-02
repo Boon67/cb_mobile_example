@@ -1,0 +1,105 @@
+version: "3.9"
+services:
+  couchbase-node_1:
+    container_name: couchbase-db1
+    build: ./be/db
+    volumes:
+      - cb_server_node_1:/usr/cbdata
+    ports:
+      - "8091-8094:8091-8094"
+      - "1210:11210"
+    networks:
+      - "cb_backplane"
+    environment:
+      NODE_TYPE: INITIAL
+      CLUSTER_USERNAME: Administrator #Initial Cluster Login ID
+      CLUSTER_PASSWORD: password #Cluster Password
+      CLUSTER_NAME: Couchbase Cluster 1 #Cluster Name
+      SERVICES: data,index,query,fts,eventing,analytics,backup #Services to enable on the cluster (data,index,query,fts,eventing,analytics,backup)
+      CLUSTER_RAMSIZE: '4096'  #Make sure your docker instance is big enough
+
+      #Buckets should only be created on the initial node
+      BUCKET: default #Create a default bucket
+      BUCKET_USERNAME: default_svc_account #Bucket User ID 
+      BUCKET_PASSWORD: password #Bucket User ID Password
+      BUCKET_RAMSIZE: '256' #Ram size for the bucket
+      ENABLE_FLUSH: 1 #Flush enabled for the bucket
+      SAMPLE_BUCKETS: beer-sample,travel-sample #TODO: If you want to add smaple buckets (not working) 
+
+      SYNCGATEWAY_SVC_ACCT: default_sg_service #Service Accounts 
+      SYNCGATEWAY_PASSWORD: password #Service Account Passwords
+      SYNCGATEWAY_ROLES: mobile_sync_gateway[*] #Service Account Roles
+
+  couchbase-node_2:
+    container_name: couchbase-db2
+    build: ./be/db
+    volumes:
+      - cb_server_node_2:/usr/cbdata
+    ports:
+      #remapped ports for running on a single host for demo purposes
+      - "28091-28094:8091-8094"
+      - "2210:11210"
+      ## Default ports if deployed on separate container nodes
+      #- "8091-8094:8091-8094"
+      #- "11210:11210"
+    networks:
+      - "cb_backplane"
+    environment:
+      NODE_TYPE: ADDITIONAL
+      CLUSTER_HOST: couchbase-node_1 #Member Host of the target Cluster
+      CLUSTER_USERNAME: Administrator #Initial Cluster Login ID
+      CLUSTER_PASSWORD: password #Cluster Password
+      SERVICES: data,index,query #Services to enable on the cluster (data,index,query,fts,eventing,analytics,backup)
+      CLUSTER_RAMSIZE: '4096'  #Make sure your docker instance is big enough
+#    depends_on:
+#      - cb_server_node_1
+
+  couchbase-node_3:
+    container_name: couchbase-db3
+    build: ./be/db
+    volumes:
+      - cb_server_node_2:/usr/cbdata
+    ports:
+      - "38091-38094:8091-8094"
+      - "3210:11210"
+      ## Default ports if deployed on separate container nodes
+      #- "8091-8094:8091-8094"
+      #- "11210:11210"
+    networks:
+      - "cb_backplane"
+    environment:
+      NODE_TYPE: ADDITIONAL
+      CLUSTER_HOST: couchbase-node_1 #Member Host of the target Cluster
+      DO_REBALANCE: 1
+      CLUSTER_USERNAME: Administrator #Initial Cluster Login ID
+      CLUSTER_PASSWORD: password #Cluster Password
+      SERVICES: data,index,query #Services to enable on the cluster (data,index,query,fts,eventing,analytics,backup)
+      CLUSTER_RAMSIZE: '4096'  #Make sure your docker instance is big enough
+    depends_on:
+ #     - couchbase-node_1,
+      - couchbase-node_2
+
+  mobile-gateway:
+    container_name: couchbase-syncgateway
+    build: ./be/syncgw
+    volumes:
+      - cb_syncgateway_node_1:/usr/syncgwdata_node1
+    ports:
+      - "4984:4984"
+      - "4985:4985"
+    networks:
+      - "cb_backplane"
+    depends_on:
+      - couchbase-node_1
+
+networks:
+  cb_backplane:
+
+volumes:
+  cb_server_node_1:
+  cb_server_node_2:
+  cb_server_node_3:
+  cb_syncgateway_node_1:
+
+
+

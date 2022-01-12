@@ -25,6 +25,7 @@ ENABLE_INDEX_REPLICA=${ENABLE_INDEX_REPLICA:=0}
 
 #Data Bucket Configuration Settings
 SAMPLE_BUCKETS=${SAMPLE_BUCKETS} ##Sample Buckets Needs to be fixed
+
 BUCKET=${BUCKET}
 BUCKET_RAMSIZE=${BUCKET_RAMSIZE:=100}
 BUCKET_PRIORITY=${BUCKET_PRIORITY:=low}
@@ -264,34 +265,25 @@ echo  /opt/couchbase/bin/couchbase-cli user-manage \
     # loop over the comma-delimited list of sample buckets i.e. beer-sample,travel-sample
     for SAMPLE in $(echo $SAMPLE_BUCKETS | sed "s/,/ /g")
     do
-      # make sure the sample requested actually exists
-      if [ -e /opt/couchbase/samples/$SAMPLE.zip ]; then
-        # load the sample documents into the bucket
-        echo Loading $SAMPLE bucket
-        /opt/couchbase/bin/cbdocloader \
-          -n localhost:8091 \
-          -u $CLUSTER_USERNAME \
-          -p $CLUSTER_PASSWORD \
-          -b $SAMPLE \
-          -s 100 \
-          /opt/couchbase/samples/$SAMPLE.zip \
-        > /dev/null 2>&1
-      else
-        echo Skipping... the $SAMPLE is not available
-      fi
+      # load the sample documents into the bucket
+      echo Loading $SAMPLE bucket
+      curl -X POST -u $CLUSTER_USERNAME:$CLUSTER_PASSWORD http://localhost:8091/sampleBuckets/install -d ["\""$SAMPLE"\""]  
+      > /dev/null 2>&1
     done
   fi
 
-  echo Waiting for $CLUSTER to become available
-  until $(curl --output /dev/null --silent --head --fail -u $CLUSTER_USERNAME:$CLUSTER_PASSWORD http://${CLUSTER}/pools); do
+else
+
+  echo Waiting for $CLUSTER_HOST to become available
+  until $(curl --output /dev/null --silent --head --fail -u $CLUSTER_USERNAME:$CLUSTER_PASSWORD http://${CLUSTER_HOST}:8091/pools); do
     printf .
     sleep 1
-  done
-else
+   done
+
   ####Configuration for a new node to an existing cluster#################
   echo ' '
   echo Adding new Node to the cluster at $CLUSTER_HOST
-  sleep 30 #HACK to wait for the initial node to get configured first and then start the configuration process
+  #sleep 30 #HACK to wait for the initial node to get configured first and then start the configuration process
   /opt/couchbase/bin/couchbase-cli server-add \
     --cluster couchbase://$(getent hosts $CLUSTER_HOST | awk '{ print $1 }') \
     --username=$CLUSTER_USERNAME \
@@ -318,5 +310,11 @@ else
     > /dev/null
   fi
 fi
+
+#Setup for alternative addresses and ports
+#couchbase-cli setting-alternate-address -c localhost:8091 --username Administrator \
+#   --password password --set --node localhost --hostname $EXTERNAL_HOSTNAME \
+#   --ports mgmt=1100,capi=2000,capiSSL=3000
+
 echo The new $NODE_TYPE node has been successfully configured
 

@@ -1,7 +1,6 @@
 .DS_Store
 ./node_modules
 web/package-lock.json
-mobile 
 node_modules
 build
 public

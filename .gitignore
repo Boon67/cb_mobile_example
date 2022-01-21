@@ -4,3 +4,4 @@ web/package-lock.json
 node_modules
 build
 public
+package-lock.json

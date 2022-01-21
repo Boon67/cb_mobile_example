@@ -1,10 +1,9 @@
 {
   "name": "couchtrip",
   "version": "1.0.2",
-  "description": "Landing, Corporate & Business Template",
+  "description": "Demonstration App for Couchbase Integrations",
   "main": "gulpfile.js",
   "scripts": {
-    "start2": "node index.html",
     "start": "gulp",
     "build": "cross-env MODE=PROD gulp build",
     "build:test": "cross-env MODE=PROD gulp build:test",

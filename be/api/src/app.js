@@ -4,7 +4,7 @@ require('dotenv').config()
 const db = require('./db/couchbase');
 const bodyParser = require('body-parser')
 const port = process.env.API_PORT || 3001;
-const Routes = require('./Routes/routes');
+const Routes = require('./routes/routes');
 
 var app = express();
 

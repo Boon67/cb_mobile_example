@@ -96,6 +96,14 @@ services:
     #depends_on:
     #  - couchbase-node_1
 
+  couchbase-api_1:
+    container_name: couchbase-api_1
+    build: ./be/api
+    ports:
+      - "4000-4001:4000-4001"
+    networks:
+      - "cb_backplane"
+
 networks:
   cb_backplane:
 
@@ -104,6 +112,3 @@ volumes:
   cb_server_node_2: {} 
   cb_server_node_3: {} 
   cb_syncgateway_node_1:
-
-
-
